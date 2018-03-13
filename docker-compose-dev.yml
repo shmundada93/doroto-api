@@ -12,10 +12,9 @@ services:
       - FLASK_APP=run.py
       - FLASK_DEBUG=1
       - DATABASE_URL=db
-    entrypoint: python run.py --host=0.0.0.0 --port 8000
+    entrypoint: python run.py
     depends_on:
       - db
-
 
   db:
     image: mysql
@@ -27,6 +26,12 @@ services:
       MYSQL_DATABASE: doroto
       MYSQL_USER: doroto
       MYSQL_PASSWORD: doroto
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 9000:8080
 
 volumes:
     dorotodevDB:
