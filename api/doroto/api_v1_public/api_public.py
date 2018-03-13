@@ -1,7 +1,7 @@
 from flask import request
 from . import api
 from .. import db
-from ..models import Company
+from ..models import Company, User
 from ..decorators import json, paginate
 
 
@@ -13,7 +13,7 @@ def new_company():
     password = data['password']
     user = User(email=email)
     user.set_password(password)	
-    db.session.add(u)	
+    db.session.add(user)	
     company = Company(user=user)
     company.import_data(request.json)
     db.session.add(company)
