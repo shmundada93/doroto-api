@@ -12,6 +12,7 @@ services:
       - FLASK_APP=run.py
       - FLASK_DEBUG=1
       - DATABASE_URL=db
+      - PYTHONUNBUFFERED=1
     command: bash -c "python manage.py db upgrade && python manage.py run"
     depends_on:
       - db
