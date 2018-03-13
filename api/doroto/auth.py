@@ -1,6 +1,6 @@
 from flask import jsonify, g, current_app
 from flask.ext.httpauth import HTTPBasicAuth
-from .models import CompanyUser
+from .models import User
 
 auth = HTTPBasicAuth()
 auth_token = HTTPBasicAuth()
@@ -8,7 +8,7 @@ auth_token = HTTPBasicAuth()
 
 @auth.verify_password
 def verify_password(email, password):
-    g.user = CompanyUser.query.filter_by(email=email).first()
+    g.user = User.query.filter_by(email=email).first()
     if g.user is None:
         return False
     return g.user.verify_password(password)
@@ -22,10 +22,13 @@ def unauthorized():
 
 @auth_token.verify_password
 def verify_auth_token(token, unused):
+    print("DATA HERE..............")
     if current_app.config.get('IGNORE_AUTH') is True:
-        g.user = CompanyUser.query.get(1)
+        print("DATA HERE")
+        g.user = User.query.get(1)
     else:
-        g.user = CompanyUser.verify_auth_token(token)
+        print("DATA HERE THERE")
+        g.user = User.verify_auth_token(token)
     return g.user is not None
 
 @auth_token.error_handler

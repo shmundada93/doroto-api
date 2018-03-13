@@ -1,4 +1,5 @@
 from . import Base
+from .. import db
 
 class PositionType(Base):
     __tablename__ = 'position_type'
