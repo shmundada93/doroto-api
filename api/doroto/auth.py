@@ -7,11 +7,16 @@ auth_token = HTTPBasicAuth()
 
 
 @auth.verify_password
-def verify_password(email, password):
-    g.user = User.query.filter_by(email=email).first()
-    if g.user is None:
-        return False
-    return g.user.verify_password(password)
+def verify_password(username_or_token, password):
+    # first try to authenticate by token
+    user = User.verify_auth_token(username_or_token)
+    if not user:
+        # try to authenticate with username/password
+        user = User.query.filter_by(email = username_or_token).first()
+        if not user or not user.verify_password(password):
+            return False
+    g.user = user
+    return True
 
 @auth.error_handler
 def unauthorized():
@@ -19,17 +24,6 @@ def unauthorized():
                         'message': 'please authenticate'})
     response.status_code = 401
     return response
-
-@auth_token.verify_password
-def verify_auth_token(token, unused):
-    print("DATA HERE..............")
-    if current_app.config.get('IGNORE_AUTH') is True:
-        print("DATA HERE")
-        g.user = User.query.get(1)
-    else:
-        print("DATA HERE THERE")
-        g.user = User.verify_auth_token(token)
-    return g.user is not None
 
 @auth_token.error_handler
 def unauthorized_token():

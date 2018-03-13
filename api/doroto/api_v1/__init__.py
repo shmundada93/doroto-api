@@ -1,5 +1,5 @@
 from flask import Blueprint
-from ..auth import auth_token
+from ..auth import auth
 from ..decorators import etag, rate_limit
 
 api = Blueprint('api', __name__)
@@ -7,7 +7,7 @@ api = Blueprint('api', __name__)
 
 @api.before_request
 @rate_limit(limit=5, period=15)
-@auth_token.login_required
+@auth.login_required
 def before_request():
     """All routes in this blueprint require authentication."""
     print("YOYO")

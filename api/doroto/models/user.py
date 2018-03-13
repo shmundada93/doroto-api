@@ -27,9 +27,8 @@ class User(Base):
     def verify_auth_token(token):
         s = Serializer(current_app.config['SECRET_KEY'])
         try:
-            print("DATA", data)
             data = s.loads(token)
-            print("DATA", data)
         except:
             return None
-        return User.query.get(data['id'])
+        user = User.query.get(data['id'])
+        return user
