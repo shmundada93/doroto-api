@@ -1,10 +1,10 @@
 import os
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-db_path = os.path.join(basedir, '../data-test.sqlite')
+db_path = os.path.join(basedir, '../data-dev.sqlite')
 
-DEBUG = False
+DEBUG = True
 TESTING = True
+IGNORE_AUTH = False
 SECRET_KEY = 'top-secret!'
-SERVER_NAME = 'example.com'
-SQLALCHEMY_DATABASE_URI = 'sqlite:///' + db_path
+SQLALCHEMY_DATABASE_URI = 'mysql://doroto:doroto@' + os.environ.get('DATABASE_URL') + "/doroto"
