@@ -9,6 +9,8 @@ class Company(Base):
     name = db.Column(db.String(256))
     address = db.Column(db.Text)
     description = db.Column(db.Text)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
+    user = db.relationship('User', backref=db.backref('company', lazy=True))
 
     def get_url(self):
         return url_for('api.get_company', id=self.id, _external=True)

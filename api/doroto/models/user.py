@@ -8,7 +8,6 @@ from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
 class User(Base):
     __tablename__ = 'users'
-    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), index=True)
     email = db.Column(db.String(128), index=True)
     password_hash = db.Column(db.String(128))
     role = db.Column(db.String(128))

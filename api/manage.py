@@ -11,14 +11,6 @@ manager.add_command('db', MigrateCommand)
 
 @manager.command
 def run():
-    with app.app_context():
-        db.create_all()
-        # create a development user	
-        if User.query.get(1) is None:	
-            u = User(email='admin@test.com')	
-            u.set_password('admin')	
-            db.session.add(u)	
-            db.session.commit()
     app.run(host="0.0.0.0", port=8000)
 
 if __name__ == '__main__':

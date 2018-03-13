@@ -10,7 +10,6 @@ api = Blueprint('api', __name__)
 @auth.login_required
 def before_request():
     """All routes in this blueprint require authentication."""
-    print("YOYO")
     pass
 
 

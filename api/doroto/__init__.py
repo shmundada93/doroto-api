@@ -19,7 +19,10 @@ def create_app(config_name):
 
     # register blueprints
     from .api_v1 import api as api_blueprint
+    from .api_v1_public import api as api_public_blueprint
+
     app.register_blueprint(api_blueprint, url_prefix='/api/v1')
+    app.register_blueprint(api_public_blueprint, url_prefix='/api/v1/p')
 
     # register an after request handler
     @app.after_request
