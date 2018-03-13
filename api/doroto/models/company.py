@@ -7,6 +7,7 @@ from .. import db
 class Company(Base):
     __tablename__ = "company"
     name = db.Column(db.String(256))
+    address = db.Column(db.Text)
     description = db.Column(db.Text)
 
     def get_url(self):
