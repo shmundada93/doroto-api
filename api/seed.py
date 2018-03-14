@@ -19,7 +19,7 @@ def seed_departments_and_positions(db):
             department = DepartmentType(name=d)
             db.session.add(department)
             for p in positions:
-                position = PositionType(department=department, name=p)
+                position = PositionType(department_type=department, name=p)
                 db.session.add(position)
     db.session.commit()
     

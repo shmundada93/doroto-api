@@ -5,10 +5,11 @@ from . import Base
 from .. import db
 
 class Recruiter(Base):
-    __tablename__ = "recruiter"
+    __tablename__ = "recruiters"
     name = db.Column(db.String(256))
     address = db.Column(db.Text)
     description = db.Column(db.Text)
+    phone = db.Column(db.String(256))
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
     user = db.relationship('User', lazy=True)
 
@@ -18,7 +19,11 @@ class Recruiter(Base):
     def export_data(self):
         return {
             'self_url': self.get_url(),
-            'name': self.name
+            'name': self.name,
+            'id': self.id,
+            'address':self.address,
+            'description':self.description,
+            'phone':self.phone
         }
 
     def import_data(self, data):

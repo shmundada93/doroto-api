@@ -5,3 +5,8 @@ from .position_type import PositionType
 from .role import Role
 from .user import User
 from .recruiter import Recruiter
+from .candidate_resume import CandidateResume
+from .candidate import Candidate
+from .job_recruiter_candidate import JobRecruiterCandidate
+from .job_recruiter import JobRecruiter
+from .job import Job

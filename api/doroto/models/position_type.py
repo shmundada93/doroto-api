@@ -5,6 +5,6 @@ from . import Base
 from .. import db
 
 class PositionType(Base):
-    __tablename__ = 'position_type'
+    __tablename__ = 'position_types'
     name = db.Column(db.String(64), index=True)
-    department_id = db.Column(db.Integer, db.ForeignKey('department_type.id'))
+    department_id = db.Column(db.Integer, db.ForeignKey('department_types.id'))
