@@ -1,26 +1,26 @@
-from flask import request
+from flask import request, jsonify
 from . import api
 from .. import db
 from ..models import Company
-from ..decorators import json, paginate
+from ..decorators import roles_required
+from ..constants import RoleType
 
 
 @api.route('/company/', methods=['GET'])
-@json
-@paginate('company')
+@roles_required([RoleType.ADMIN])
 def get_companies():
-    return Company.query
+    return jsonify({'companies': [company.export_data() for company in Company.query.all()]})
 
 @api.route('/company/<int:id>', methods=['GET'])
-@json
+@roles_required([RoleType.COMPANY, RoleType.ADMIN])
 def get_company(id):
-    return Company.query.get_or_404(id)
+    return jsonify(Company.query.get_or_404(id).export_data())
 
 @api.route('/company/<int:id>', methods=['PUT'])
-@json
+@roles_required([RoleType.COMPANY, RoleType.ADMIN])
 def edit_company(id):
     company = Company.query.get_or_404(id)
     company.import_data(request.json)
     db.session.add(company)
     db.session.commit()
-    return {}
+    return jsonify(company.export_data())

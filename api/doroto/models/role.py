@@ -4,6 +4,7 @@ from ..utils import split_url
 from . import Base
 from .. import db
 
-class UserType(Base):
-    __tablename__ = 'user_type'
+class Role(Base):
+    __tablename__ = 'roles'
     name = db.Column(db.String(64), index=True)
+    users = db.relationship('User', backref='role', lazy='dynamic')

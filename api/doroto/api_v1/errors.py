@@ -33,3 +33,4 @@ def internal_server_error(e):
                         'message': e.args[0]})
     response.status_code = 500
     return response
+

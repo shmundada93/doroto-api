@@ -1,0 +1,5 @@
+class RoleType:
+    ADMIN = 'ADMIN'
+    COMPANY = 'COMPANY'
+    RECRUITER = 'RECRUITER'
+    CANDIDATE = 'CANDIDATE'

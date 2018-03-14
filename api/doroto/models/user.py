@@ -8,9 +8,9 @@ from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
 class User(Base):
     __tablename__ = 'users'
-    email = db.Column(db.String(128), index=True)
+    email = db.Column(db.String(128), unique=True, index=True, nullable=False)
     password_hash = db.Column(db.String(128))
-    role = db.Column(db.String(128))
+    role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -31,3 +31,6 @@ class User(Base):
             return None
         user = User.query.get(data['id'])
         return user
+
+    def has(self, roles):
+        return self.role.name in roles
