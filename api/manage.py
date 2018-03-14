@@ -4,8 +4,12 @@ from doroto.models import User
 from flask_script import Manager, Shell
 from flask_migrate import Migrate, MigrateCommand
 from seed import seed_roles, seed_departments_and_positions
+from flask_cors import CORS, cross_origin
 
 app = create_app(os.environ.get('FLASK_CONFIG', 'testing'))
+if os.environ.get('FLASK_CONFIG') == 'testing':
+    CORS(app)
+
 manager = Manager(app)
 migrate = Migrate(app, db)
 manager.add_command('db', MigrateCommand)
