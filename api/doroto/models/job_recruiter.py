@@ -10,3 +10,4 @@ class JobRecruiter(Base):
     recruiter_id = db.Column(db.Integer, db.ForeignKey('recruiters.id'), index=True)
     resume_limit = db.Column(db.Integer)
     action_status = db.Column(db.String(256))
+    guid = db.Column(db.String(256), index=True)

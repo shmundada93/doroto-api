@@ -19,4 +19,4 @@ def after_request(rv):
     """Generate an ETag header for all routes in this blueprint."""
     return rv
 
-from . import company, errors, recruiter
+from . import company, errors, recruiter, candidate, admin

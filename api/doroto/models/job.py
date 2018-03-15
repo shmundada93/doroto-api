@@ -9,5 +9,8 @@ class Job(Base):
     title = db.Column(db.String(256))
     company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), index=True)
     job_description = db.Column(db.Text)
+    recruiter_description = db.Column(db.Text)
+    questions = db.Column(db.Text)
     open_positions = db.Column(db.Integer)
     position_id = db.Column(db.Integer, db.ForeignKey('position_types.id'), index=True)
+    recruiters = db.relationship('JobRecruiter', backref='job', lazy='dynamic')
