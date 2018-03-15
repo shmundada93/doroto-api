@@ -10,6 +10,7 @@ class Recruiter(Base):
     address = db.Column(db.Text)
     description = db.Column(db.Text)
     phone = db.Column(db.String(256))
+    activation_status = db.Column(db.String(256))
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
     user = db.relationship('User', lazy=True)
 

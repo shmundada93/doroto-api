@@ -4,4 +4,4 @@ from ..decorators import etag, rate_limit
 
 api = Blueprint('api_public', __name__)
 
-from . import api_public
+from . import api_public, errors

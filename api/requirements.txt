@@ -1,6 +1,7 @@
 alembic==0.9.8
 coverage==3.7.1
 Flask==0.10.1
+Flask-Cors==3.0.3
 Flask-HTTPAuth==2.2.1
 Flask-Migrate==2.1.1
 Flask-Script==2.0.6
@@ -18,4 +19,3 @@ requests==2.3.0
 six==1.7.3
 SQLAlchemy==0.9.6
 Werkzeug==0.9.6
-flask-cors

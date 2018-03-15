@@ -27,6 +27,14 @@ def method_not_supported(e):
     return response
 
 
+@api.errorhandler(403)  # this has to be an app-wide handler
+def unauthorized(e):
+    response = jsonify({'status': 403, 'error': 'unauthorized',
+                        'message': 'Insufficient permissions'})
+    response.status_code = 403
+    return response
+
+
 @api.app_errorhandler(500)  # this has to be an app-wide handler
 def internal_server_error(e):
     response = jsonify({'status': 500, 'error': 'internal server error',

@@ -1,4 +1,4 @@
-from flask import request, jsonify
+from flask import request, jsonify, g, abort
 from . import api
 from .. import db
 from ..models import Company
@@ -6,21 +6,23 @@ from ..decorators import roles_required
 from ..constants import RoleType
 
 
-@api.route('/company/', methods=['GET'])
-@roles_required([RoleType.ADMIN])
-def get_companies():
-    return jsonify({'companies': [company.export_data() for company in Company.query.all()]})
+def verify_permissions(company_id):
+    company = Company.query.get_or_404(company_id)
+    if g.user.id != company.user.id and g.user.role.name != RoleType.ADMIN:
+        abort(403)
+    else:
+        return company
 
 @api.route('/company/<int:id>', methods=['GET'])
 @roles_required([RoleType.COMPANY, RoleType.ADMIN])
 def get_company(id):
-    return jsonify(Company.query.get_or_404(id).export_data())
-
-@api.route('/company/<int:id>', methods=['PUT'])
-@roles_required([RoleType.COMPANY, RoleType.ADMIN])
-def edit_company(id):
-    company = Company.query.get_or_404(id)
-    company.import_data(request.json)
-    db.session.add(company)
-    db.session.commit()
-    return jsonify(company.export_data())
+    company = verify_permissions(id)
+    response = {
+        "id": company.id,
+        "name": company.name,
+        "address": company.description,
+        "description": company.description,
+        "phone": company.phone,
+        "job_count": company.jobs.count()
+    }
+    return jsonify(response)
