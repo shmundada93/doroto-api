@@ -1,25 +1,16 @@
 from flask import request, jsonify, g, abort
 from . import api
 from .. import db
-from ..models import Company, Job, PositionType, JobRecruiter, Recruiter
+from ..models import Company, Job, PositionType, JobRecruiter, Recruiter, JobRecruiterCandidate
 from ..decorators import roles_required
 from ..constants import RoleType, JobStatus, RecruiterStatus, CandidateStatus, AccountStatus
 from ..exceptions import ValidationError
+from doroto.decorators.permission_evaluator import has_permissions
 import uuid
 
-def verify_permissions(company_id):
-    company = Company.query.get_or_404(company_id)
-    if company.status != AccountStatus.ACTIVE:
-        raise ValidationError("Company account status is PENDING or INACTIVE")
-    if g.user.id != company.user.id and g.user.role.name != RoleType.ADMIN:
-        abort(403)
-    else:
-        return company
-
-@api.route('/companies/<int:id>', methods=['GET'])
-@roles_required([RoleType.COMPANY, RoleType.ADMIN])
+@api.route('/company/<int:id>', methods=['GET'])
+@has_permissions("company")
 def get_company(id):
-    company = verify_permissions(id)
     response = {
         "id": company.id,
         "name": company.name,
@@ -31,10 +22,9 @@ def get_company(id):
     return jsonify(response)
 
 
-@api.route('/companies/<int:id>/jobs/', methods=['POST'])
-@roles_required([RoleType.COMPANY, RoleType.ADMIN])
+@api.route('/company/<int:id>/jobs/', methods=['POST'])
+@has_permissions("company")
 def create_job(id):
-    company = verify_permissions(id)
     data = request.json
     ## Validate input
     try:
@@ -59,9 +49,9 @@ def create_job(id):
     return jsonify(response), 201
 
 
-@api.route('/jobs/<int:job_id>/recruiters/', methods=['PUT'])
-@roles_required([RoleType.COMPANY, RoleType.ADMIN])
-def select_job_recruiters(job_id):
+@api.route('/company/<id>/jobs/<int:job_id>/recruiters/', methods=['PUT'])
+@has_permissions("company")
+def select_job_recruiters(id, job_id):
     job = Job.query.get_or_404(job_id)
     company_id = job.company.id
     company = verify_permissions(company_id)
@@ -98,9 +88,9 @@ def select_job_recruiters(job_id):
     return jsonify(response), 201
 
 
-@api.route('/recruiters/suggestions/', methods=['GET'])
-@roles_required([RoleType.COMPANY, RoleType.ADMIN])
-def get_suggested_recruiters():
+@api.route('/company/<id>/recruiters/suggestions/', methods=['GET'])
+@has_permissions("company")
+def get_suggested_recruiters(id):
     job_id = request.args.get('job_id')
     job = Job.query.get_or_404(job_id)
     company_id = job.company.id
@@ -120,4 +110,51 @@ def get_suggested_recruiters():
         "title":job.title,
         "suggested_recruiters": recruiters_json
     }
-    return jsonify(response)
+    return jsonify(response), 201
+
+@api.route('/company/<id>/job/<job_id>/candidates/', methods=['GET'])
+@has_permissions("company")
+def get_job_candidates(id, job_id):
+    job_recruiters = JobRecruiter.query.filter_by(job_id=job_id).all()
+    candidates = []
+    candidateStatus = CandidateStatus()
+    for job_rec in job_recruiters:
+        job_recruiter_candidate = JobRecruiterCandidate.query.filter_by(job_recruiter_id=job_rec.id).first()
+        if candidateStatus.checkHideCriteria(job_recruiter_candidate.status):
+            name = "HIDDEN"
+            phone = "HIDDEN"
+            email = "HIDDEN"
+        else:
+            name = job_recruiter_candidate.candidate.name
+            phone = job_recruiter_candidate.candidate.phone
+            email = job_recruiter_candidate.candidate.user.email
+        candidates.append({
+            'candidate_id': job_recruiter_candidate.candidate_id,
+            'status': job_recruiter_candidate.status,
+            'name': name,
+            'phone': phone,
+            'email': email,
+            'recruiter_id': job_recruiter_candidate.candidate_recruiter.recruiter_id,
+            'recruiter_name': job_recruiter_candidate.candidate_recruiter.recruiter.name,
+            'recruiter_email': job_recruiter_candidate.candidate_recruiter.recruiter.user.email
+        })
+    return jsonify({"candidates": candidates}), 201
+
+@api.route('/company/<id>/job/<job_id>/candidate/<candidate_id>', methods=['PUT'])
+@has_permissions("company")
+def update_candidate_status(id, job_id, candidate_id):
+    data = request.json
+    candidateStatus = CandidateStatus()
+    if not candidateStatus.checkIfStatusValid(data["status"]):
+        raise ValidationError('Invalid status')
+    job_recruiters = JobRecruiter.query.filter_by(job_id=job_id).all()
+    for job_rec in job_recruiters:
+        job_recruiter_candidate = JobRecruiterCandidate.query\
+            .filter_by(job_recruiter_id=job_rec.id)\
+            .filter_by(candidate_id=candidate_id).first()
+        if job_recruiter_candidate is not None:
+            job_recruiter_candidate.status = data["status"]
+            db.session.commit()
+            return jsonify({"candidate_id": candidate_id}), 201
+    raise ValidationError('Invalid candidate id ' + candidate_id + ' for this job')
+    return jsonify({"status": "ok"}), 201
