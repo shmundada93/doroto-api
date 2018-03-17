@@ -58,3 +58,7 @@ class CandidateStatus:
             , CandidateStatus.OFFERED, CandidateStatus.JOINED]:
             return False
         return True
+
+class EmailType:
+    COMPANY_ONBOARDING = 'COMPANY_ONBOARDING'
+    RECRUITER_ONBOARDING = 'RECRUITER_ONBOARDING'
