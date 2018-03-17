@@ -1,8 +1,8 @@
 from flask import request, jsonify
 from . import api
 from .. import db
-from ..models import Company, User, Role, Recruiter
-from ..constants import RoleType
+from ..models import Company, User, Role, Recruiter, Candidate, JobRecruiter
+from ..constants import RoleType, AccountStatus, RecruiterStatus, JobStatus, CandidateStatus
 from ..exceptions import ValidationError
 
 
@@ -29,7 +29,7 @@ def new_company():
     address = data.get("address", None)
     description = data.get("description", None)
     phone = data.get("phone", None)
-    company = Company(user=user, name=name, address=address, description=description, phone=phone, activation_status="INPROGRESS")
+    company = Company(user=user, name=name, address=address, description=description, phone=phone, status=AccountStatus.PENDING)
     db.session.add(company)
     db.session.commit()
     ## Generate response
@@ -60,7 +60,7 @@ def new_recruiter():
     address = data.get("address", None)
     description = data.get("description", None)
     phone = data.get("phone", None)
-    recruiter = Recruiter(user=user, name=name, address=address, description=description, phone=phone, activation_status="INPROGRESS")
+    recruiter = Recruiter(user=user, name=name, address=address, description=description, phone=phone, status=AccountStatus.PENDING)
     db.session.add(recruiter)
     db.session.commit()
     ## Generate response
@@ -75,6 +75,7 @@ def new_candidate():
         name = data['name']
         email = data['email']
         password = data['password']
+        phone = data['phone']
     except KeyError as e:
         raise ValidationError('Invalid candidate: missing ' + e.args[0])
     user = User.query.filter_by(email=email).first()
@@ -87,14 +88,34 @@ def new_candidate():
     user.set_password(password)	
     db.session.add(user)
     ## Create candidate
-    phone = data.get("phone", None)
-    candidate = Candidate(user=user, name=name, phone=phone, activation_status="INPROGRESS")
+    candidate = Candidate(user=user, name=name, phone=phone)
     db.session.add(candidate)
     db.session.commit()
     ## Generate response
     response = {'id':candidate.id, 'name':candidate.name, "email": candidate.user.email, "token": candidate.user.generate_auth_token()}
     return jsonify(response), 201
 
+@api.route('/jobs/<guid>', methods=['GET'])
+def get_job_details(guid):
+    jobRecruiter = JobRecruiter.query.filter_by(guid=guid).first()
+    # Ensure that job is "OPEN" and jobRecruiter request status is "ACCEPTED"
+    if jobRecruiter.status != RecruiterStatus.ACCEPTED:
+        raise ValidationError("Recruiter no longer accepting candidates for this position")
+    if jobRecruiter.job.status != JobStatus.OPEN:
+        raise ValidationError("This job position is no longer open")
+    job = jobRecruiter.job
+    recruiter = jobRecruiter.recruiter
+    response = {
+        "guid": guid,
+        "job_title": job.title,
+        "job_description": job.job_description,
+        "job_questions": job.questions,
+        "company_name": job.company.name,
+        "company_description": job.company.description,
+        "recruiter": recruiter.name
+    }
+    return jsonify(response)
+    
 
 @api.route('/status/', methods=['GET'])
 def pub_api_status():

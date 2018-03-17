@@ -5,7 +5,6 @@ from . import api
 
 @api.errorhandler(ValidationError)
 def bad_request(e):
-    print("Hello")
     response = jsonify({'status': 400, 'error': 'bad request',
                         'message': e.args[0]})
     response.status_code = 400

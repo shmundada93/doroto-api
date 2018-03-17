@@ -7,7 +7,7 @@ from .. import db
 class Company(Base):
     __tablename__ = "companies"
     name = db.Column(db.String(256))
-    activation_status = db.Column(db.String(256))
+    status = db.Column(db.String(256))
     address = db.Column(db.Text)
     description = db.Column(db.Text)
     phone = db.Column(db.String(256))

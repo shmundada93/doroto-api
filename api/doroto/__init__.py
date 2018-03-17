@@ -1,6 +1,7 @@
 import os
 from flask import Flask, jsonify, g
 from flask.ext.sqlalchemy import SQLAlchemy
+from celery import Celery
 from .decorators import json, no_cache, rate_limit
 
 db = SQLAlchemy()
@@ -42,3 +43,33 @@ def create_app(config_name):
         return {'token': g.user.generate_auth_token(), 'role': g.user.role.name}
 
     return app
+
+def make_celery(config_name):
+    """Create an application instance."""
+    app = Flask(__name__)
+
+    # apply configuration
+    cfg = os.path.join(os.getcwd(), 'config', config_name + '.py')
+    app.config.from_pyfile(cfg)
+
+    # initialize extensions
+    db.init_app(app)
+
+    celery = Celery(
+        app.import_name,
+        broker=app.config['CELERY_BROKER_URL'],
+        backend=app.config['CELERY_BACKEND_URL']
+    )
+    celery.conf.update(app.config)
+    TaskBase = celery.Task
+
+    class ContextTask(TaskBase):
+        abstract = True
+
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return TaskBase.__call__(self, *args, **kwargs)
+
+    celery.Task = ContextTask
+
+    return celery

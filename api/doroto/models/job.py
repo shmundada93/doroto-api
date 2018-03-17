@@ -12,5 +12,6 @@ class Job(Base):
     recruiter_description = db.Column(db.Text)
     questions = db.Column(db.Text)
     open_positions = db.Column(db.Integer)
+    status = db.Column(db.String(256))
     position_id = db.Column(db.Integer, db.ForeignKey('position_types.id'), index=True)
-    recruiters = db.relationship('JobRecruiter', backref='job', lazy='dynamic')
+    job_recruiters = db.relationship('JobRecruiter', backref='job', lazy='dynamic')

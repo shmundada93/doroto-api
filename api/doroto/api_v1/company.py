@@ -3,15 +3,16 @@ from . import api
 from .. import db
 from ..models import Company, Job, PositionType, JobRecruiter, Recruiter
 from ..decorators import roles_required
-from ..constants import RoleType
+from ..constants import RoleType, JobStatus, RecruiterStatus, CandidateStatus, AccountStatus
 from ..exceptions import ValidationError
 import uuid
 
 def verify_permissions(company_id):
     company = Company.query.get_or_404(company_id)
+    if company.status != AccountStatus.ACTIVE:
+        raise ValidationError("Company account status is PENDING or INACTIVE")
     if g.user.id != company.user.id and g.user.role.name != RoleType.ADMIN:
         abort(403)
-    ## ToDo: Check activation status
     else:
         return company
 
@@ -46,7 +47,7 @@ def create_job(id):
     ## Create Job
     recruiter_description = data.get('recruiter_description', None)
     questions = data.get('questions', None)
-    job = Job(position_id=position_id, company_id=id, title=title, job_description=job_description)
+    job = Job(position_id=position_id, company_id=id, title=title, job_description=job_description, status=JobStatus.OPEN)
     job.recruiter_description = recruiter_description
     job.questions = questions
     db.session.add(job)
@@ -72,7 +73,7 @@ def select_job_recruiters(job_id):
             recruiter_id = recruiter["id"]
             resume_limit = int(recruiter.get("resume_limit", 5))
             jobRecruiter = JobRecruiter(job_id=job_id, recruiter_id=recruiter_id, \
-                        resume_limit= resume_limit, action_status= "REQUESTED", guid=uuid.uuid4())
+                        resume_limit= resume_limit, status= RecruiterStatus.REQUEST_SENT, guid=uuid.uuid4())
             ## Check if jobReruiter already added
             tempJobRecruiter = JobRecruiter.query.filter_by(job_id=job_id).filter_by(recruiter_id=recruiter_id).first()
             if not tempJobRecruiter:

@@ -7,5 +7,6 @@ from .. import db
 class CandidateResume(Base):
     __tablename__ = "candidate_resumes"
     candidate_id = db.Column(db.Integer, db.ForeignKey('candidates.id'), index=True)
+    resume_name = db.Column(db.String(256))
     resume_url = db.Column(db.String(256))
     redacted_resume_url = db.Column(db.String(256))
