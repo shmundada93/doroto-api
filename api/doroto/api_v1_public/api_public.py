@@ -1,9 +1,10 @@
-from flask import request, jsonify
+from flask import request, jsonify, current_app
 from . import api
 from .. import db
 from ..models import Company, User, Role, Recruiter, Candidate, JobRecruiter
-from ..constants import RoleType, AccountStatus, RecruiterStatus, JobStatus, CandidateStatus
+from ..constants import RoleType, AccountStatus, RecruiterStatus, JobStatus, CandidateStatus, EmailType
 from ..exceptions import ValidationError
+from ..tasks import sendEmail
 
 
 @api.route('/companies/', methods=['POST'])
@@ -32,6 +33,7 @@ def new_company():
     company = Company(user=user, name=name, address=address, description=description, phone=phone, status=AccountStatus.PENDING)
     db.session.add(company)
     db.session.commit()
+    sendEmail.delay(EmailType.COMPANY_ONBOARDING, [current_app.config['ADMIN_EMAIL'], email], {'name':company.name})
     ## Generate response
     response = {'id':company.id, 'name':company.name, "email": company.user.email, "token": company.user.generate_auth_token()}
     return jsonify(response), 201

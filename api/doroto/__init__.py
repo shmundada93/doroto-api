@@ -3,6 +3,7 @@ from flask import Flask, jsonify, g
 from flask.ext.sqlalchemy import SQLAlchemy
 from celery import Celery
 from .decorators import json, no_cache, rate_limit
+import boto3
 
 db = SQLAlchemy()
 
@@ -52,6 +53,13 @@ def make_celery(config_name):
     cfg = os.path.join(os.getcwd(), 'config', config_name + '.py')
     app.config.from_pyfile(cfg)
 
+    # Initialize aws client
+    aws_client = boto3.Session(
+        aws_access_key_id=app.config['AWS_ACCESS_KEY'],
+        aws_secret_access_key=app.config['AWS_ACCESS_KEY_SECRET'],
+        region_name=app.config['AWS_REGION']
+    )
+
     # initialize extensions
     db.init_app(app)
 
@@ -72,4 +80,4 @@ def make_celery(config_name):
 
     celery.Task = ContextTask
 
-    return celery
+    return celery, aws_client

@@ -12,3 +12,7 @@ UPLOAD_FOLDER = '/home/doroto/uploads'
 ALLOWED_EXTENSIONS = set(['pdf', 'doc', 'docx'])
 CELERY_BROKER_URL= 'redis://{}:6379'.format(os.environ['REDIS_HOST'])
 CELERY_BACKEND_URL= 'redis://{}:6379'.format(os.environ['REDIS_HOST'])
+AWS_ACCESS_KEY = os.environ['AWS_ACCESS_KEY']
+AWS_ACCESS_KEY_SECRET = os.environ['AWS_ACCESS_KEY_SECRET']
+AWS_REGION = os.environ['AWS_REGION']
+ADMIN_EMAIL = os.environ['ADMIN_EMAIL']
