@@ -24,7 +24,7 @@ services:
   celery:
     build: ./api
     restart: always
-    command: celery -A doroto.tasks worker --loglevel=info --concurrency=1
+    command: celery -A doroto.tasks.celery worker --loglevel=info --concurrency=1
     env_file: .env
     environment: 
       - DATABASE_URL=mysql
@@ -37,7 +37,7 @@ services:
   celery-monitoring:
     build: ./api
     restart: always
-    command: flower -A doroto.tasks --port=5555 --persistent=False
+    command: flower -A doroto.tasks.celery --port=5555 --persistent=False
     env_file: .env
     volumes:
       - ./api:/home/doroto/api

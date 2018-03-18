@@ -80,4 +80,4 @@ def make_celery(config_name):
 
     celery.Task = ContextTask
 
-    return celery, aws_client
+    return celery, app, aws_client

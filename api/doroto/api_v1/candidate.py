@@ -1,4 +1,4 @@
-from flask import request, jsonify, g, abort
+from flask import request, jsonify, g, abort, current_app
 from . import api
 from .. import db
 from ..models import Company, Job, PositionType, JobRecruiter, Recruiter, Candidate, JobRecruiterCandidate, CandidateResume
@@ -6,38 +6,42 @@ from doroto.decorators.permission_evaluator import has_permissions
 from ..constants import RoleType, JobStatus, RecruiterStatus, CandidateStatus, AccountStatus
 from ..exceptions import ValidationError
 from werkzeug.utils import secure_filename
+from ..utils import allowed_file
+from ..tasks import redactAndUploadResume, uploadFileToS3
+import os
 import uuid
 
 @api.route('/candidates/<int:id>/resumes/', methods=['POST'])
 @has_permissions("candidate")
 def upload_resume(id):
-    data = request.json
     ## Validate input
-    file = request.files['file']
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    outputfile = '' + str(project_id) + '.xlsx'
-    outputfile_path = dir_path + "/../temp/" + outputfile
-    file.save(outputfile_path)
     try:
-        title = data['title']
-        job_description = data['job_description']
-        open_positions = data['open_positions']
-        position_id = data['position_id']
+        file = request.files['resume_file']
+        resume_name = request.form['resume_name']
     except KeyError as e:
-        raise ValidationError('Invalid job: missing ' + e.args[0])
-    ## Create Job
-    recruiter_description = data.get('recruiter_description', None)
-    questions = data.get('questions', None)
-    job = Job(position_id=position_id, company_id=id, title=title, job_description=job_description, status=JobStatus.OPEN)
-    job.recruiter_description = recruiter_description
-    job.questions = questions
-    db.session.add(job)
+        raise ValidationError('Invalid resume: missing ' + e.args[0])
+    if file.filename == '':
+        raise ValidationError('No selected file')
+    if file and allowed_file(file.filename):
+        extension = file.filename.split(".")[-1]
+        filename = str(uuid.uuid4())
+        filename_with_extension = filename + "." + extension
+        filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename_with_extension)
+        file.save(filepath)
+    candidate = Candidate.query.get_or_404(id)
+    resume_filename = "{}/resumes/candidate-{}/{}.pdf".format(current_app.config['FLASK_CONFIG'], id, filename)
+    resume_url = "https://s3-{}.amazonaws.com/doroto/{}".format(current_app.config['AWS_REGION'], resume_filename)
+    uploadFileToS3(filepath, resume_filename)
+    candidateResume = CandidateResume(candidate=candidate, resume_name=resume_name, resume_url=resume_url, redacted_resume_url=filename)
+    db.session.add(candidateResume)
     db.session.commit()
+    redactAndUploadResume.delay(candidateResume.id, resume_filename)
     response = {
-        "id": job.id,
-        "title": job.title
+        "id": candidateResume.id,
+        "resume_name": candidateResume.resume_name
     }
     return jsonify(response), 201
+
 
 @api.route('/candidate/<int:id>/job/<guid>/apply', methods=['POST'])
 @has_permissions("candidate")

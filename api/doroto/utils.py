@@ -4,9 +4,10 @@ from werkzeug.exceptions import NotFound
 from .exceptions import ValidationError
 from flask import current_app
 
+
 def allowed_file(filename):
     return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in current_app.config('ALLOWED_EXTENSIONS')
+           filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
 
 def split_url(url, method='GET'):
     """Returns the endpoint name and arguments that match a given URL. In
