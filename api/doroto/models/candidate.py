@@ -11,3 +11,4 @@ class Candidate(Base):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
     user = db.relationship('User', lazy=True)
     resumes = db.relationship('CandidateResume', backref='candidate', lazy='dynamic')
+    jobs = db.relationship('JobRecruiterCandidate', backref='candidate', lazy='dynamic')

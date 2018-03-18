@@ -11,3 +11,4 @@ class JobRecruiter(Base):
     resume_limit = db.Column(db.Integer)
     status = db.Column(db.String(256))
     guid = db.Column(db.String(256), index=True)
+    candidates = db.relationship('JobRecruiterCandidate', backref='candidate_recruiter', lazy='dynamic')

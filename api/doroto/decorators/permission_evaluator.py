@@ -3,7 +3,7 @@ from time import time
 from flask import current_app, request, g, jsonify, abort
 from ..errors import unauthorized
 from doroto.constants import RoleType
-from doroto.models import Recruiter, Company, Candidate
+from doroto.models import Recruiter, Company, Candidate, Company
 
 def roles_required(roles):
     def decorator(f):
@@ -33,6 +33,10 @@ def has_permissions(type):
             if type == "candidate":
                 candidate = Candidate.query.get_or_404(kwargs['id'])
                 if g.user.id != candidate.user.id or g.user.role.name != RoleType.CANDIDATE:
+                    abort(403)
+            if type == "company":
+                comany = Company.query.get_or_404(kwargs['id'])
+                if g.user.id != comany.user.id or g.user.role.name != RoleType.COMPANY:
                     abort(403)
             return func(*args, **kwargs)
         return wrapper

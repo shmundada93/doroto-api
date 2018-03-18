@@ -49,15 +49,21 @@ class CandidateStatus:
     SHORTLISTED = 'SHORTLISTED'
     OFFERED = 'OFFERED'
     JOINED = 'JOINED'
+    REJECTED = 'REJECTED'
 
     def __init__(self):
         pass
 
     def checkIfStatusValid(self, status):
         if status not in [CandidateStatus.ACCEPTED, CandidateStatus.SUBMITTED, CandidateStatus.SHORTLISTED\
-            , CandidateStatus.OFFERED, CandidateStatus.JOINED]:
+            , CandidateStatus.OFFERED, CandidateStatus.JOINED, CandidateStatus.REJECTED]:
             return False
         return True
+
+    def checkHideCriteria(self, status):
+        if status in [CandidateStatus.ACCEPTED, CandidateStatus.SUBMITTED]:
+            return True
+        return False
 
 class EmailType:
     COMPANY_ONBOARDING = 'COMPANY_ONBOARDING'
