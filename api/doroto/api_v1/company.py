@@ -6,6 +6,7 @@ from ..decorators import roles_required
 from ..constants import RoleType, JobStatus, RecruiterStatus, CandidateStatus, AccountStatus
 from ..exceptions import ValidationError
 from doroto.decorators.permission_evaluator import has_permissions
+from sqlalchemy.sql import func
 import uuid
 
 @api.route('/company/<int:id>', methods=['GET'])
@@ -23,7 +24,7 @@ def get_company(id):
     return jsonify(response)
 
 
-@api.route('/company/<int:id>/jobs/', methods=['POST'])
+@api.route('/company/<int:id>/jobs/create', methods=['POST'])
 @has_permissions("company")
 def create_job(id):
     company = Company.query.get_or_404(id)
@@ -164,3 +165,43 @@ def update_candidate_status(id, job_id, candidate_id):
             return jsonify({"candidate_id": candidate_id}), 201
     raise ValidationError('Invalid candidate id ' + candidate_id + ' for this job')
     return jsonify({"status": "ok"}), 201
+
+
+@api.route('/company/<int:id>/jobs/', methods=['GET'])
+@has_permissions("company")
+def get_company_jobs(id):
+    jobs = Job.query.filter_by(company_id=id).all()
+    jobs_info = []
+    for job in jobs:
+        resumes_requested = db.session.query(func.sum(JobRecruiter.resume_limit).label('requested'))\
+                            .filter(JobRecruiter.job_id==job.id).first().requested
+        resumes_received = db.session.query(JobRecruiterCandidate).join(JobRecruiter).join(Job)\
+                            .filter(JobRecruiterCandidate.job_recruiter_id == JobRecruiter.id)\
+                            .filter(JobRecruiter.job_id == job.id)\
+                            .filter(JobRecruiterCandidate.status != CandidateStatus.ACCEPTED)\
+                            .count()
+
+        resumes_shortlisted = db.session.query(JobRecruiterCandidate).join(JobRecruiter).join(Job)\
+                            .filter(JobRecruiterCandidate.job_recruiter_id == JobRecruiter.id)\
+                            .filter(JobRecruiter.job_id == job.id)\
+                            .filter(JobRecruiterCandidate.status != CandidateStatus.ACCEPTED)\
+                            .filter(JobRecruiterCandidate.status != CandidateStatus.SUBMITTED)\
+                            .count()
+        
+        resumes_requested = int(resumes_requested) if resumes_requested else 0
+        jobs_info.append(
+            {
+                "job_id": job.id,
+                "job_title": job.title,
+                "job_status": job.status,
+                "open_positions": job.open_positions,
+                "created_at": job.date_created,
+                "candidate_stats":{
+                    "requested": resumes_requested,
+                    "received": resumes_received,
+                    "shortlisted": resumes_shortlisted
+                }
+            }
+        )
+    response = {"jobs": jobs_info}
+    return jsonify(response)
