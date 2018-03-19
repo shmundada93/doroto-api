@@ -11,6 +11,7 @@ import uuid
 @api.route('/company/<int:id>', methods=['GET'])
 @has_permissions("company")
 def get_company(id):
+    company = Company.query.get_or_404(id)
     response = {
         "id": company.id,
         "name": company.name,
@@ -25,6 +26,7 @@ def get_company(id):
 @api.route('/company/<int:id>/jobs/', methods=['POST'])
 @has_permissions("company")
 def create_job(id):
+    company = Company.query.get_or_404(id)
     data = request.json
     ## Validate input
     try:
@@ -53,8 +55,7 @@ def create_job(id):
 @has_permissions("company")
 def select_job_recruiters(id, job_id):
     job = Job.query.get_or_404(job_id)
-    company_id = job.company.id
-    company = verify_permissions(company_id)
+    company = Company.query.get_or_404(id)
     data = request.json
     ## Validate input
     try:
@@ -93,8 +94,7 @@ def select_job_recruiters(id, job_id):
 def get_suggested_recruiters(id):
     job_id = request.args.get('job_id')
     job = Job.query.get_or_404(job_id)
-    company_id = job.company.id
-    company = verify_permissions(company_id)
+    company = Company.query.get_or_404(id)
     recruiters = Recruiter.query.all()
     recruiters_json = []
     for recruiter in recruiters:
@@ -119,25 +119,31 @@ def get_job_candidates(id, job_id):
     candidates = []
     candidateStatus = CandidateStatus()
     for job_rec in job_recruiters:
-        job_recruiter_candidate = JobRecruiterCandidate.query.filter_by(job_recruiter_id=job_rec.id).first()
-        if candidateStatus.checkHideCriteria(job_recruiter_candidate.status):
-            name = "HIDDEN"
-            phone = "HIDDEN"
-            email = "HIDDEN"
-        else:
-            name = job_recruiter_candidate.candidate.name
-            phone = job_recruiter_candidate.candidate.phone
-            email = job_recruiter_candidate.candidate.user.email
-        candidates.append({
-            'candidate_id': job_recruiter_candidate.candidate_id,
-            'status': job_recruiter_candidate.status,
-            'name': name,
-            'phone': phone,
-            'email': email,
-            'recruiter_id': job_recruiter_candidate.candidate_recruiter.recruiter_id,
-            'recruiter_name': job_recruiter_candidate.candidate_recruiter.recruiter.name,
-            'recruiter_email': job_recruiter_candidate.candidate_recruiter.recruiter.user.email
-        })
+        ## ToDo check candidate status
+        job_recruiter_candidates = JobRecruiterCandidate.query.filter_by(job_recruiter_id=job_rec.id)\
+            .filter(~JobRecruiterCandidate.status.in_([CandidateStatus.ACCEPTED])).all()
+        for job_recruiter_candidate in job_recruiter_candidates:
+            if candidateStatus.checkHideCriteria(job_recruiter_candidate.status):
+                name = job_recruiter_candidate.marvel_name
+                phone = "****"
+                email = "****"
+                resume_url = job_recruiter_candidate.candidate_resume.redacted_resume_url
+            else:
+                name = job_recruiter_candidate.candidate.name
+                phone = job_recruiter_candidate.candidate.phone
+                email = job_recruiter_candidate.candidate.user.email
+                resume_url = job_recruiter_candidate.candidate_resume.resume_url
+            candidates.append({
+                'candidate_id': job_recruiter_candidate.candidate_id,
+                'status': job_recruiter_candidate.status,
+                'name': name,
+                'phone': phone,
+                'email': email,
+                'resume_url': resume_url,
+                'recruiter_id': job_recruiter_candidate.candidate_recruiter.recruiter_id,
+                'recruiter_name': job_recruiter_candidate.candidate_recruiter.recruiter.name,
+                'recruiter_email': job_recruiter_candidate.candidate_recruiter.recruiter.user.email
+            })
     return jsonify({"candidates": candidates}), 201
 
 @api.route('/company/<id>/job/<job_id>/candidate/<candidate_id>', methods=['PUT'])

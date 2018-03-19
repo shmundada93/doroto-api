@@ -9,4 +9,5 @@ class JobRecruiterCandidate(Base):
     job_recruiter_id = db.Column(db.Integer, db.ForeignKey('job_recruiter.id'), index=True)
     candidate_id = db.Column(db.Integer, db.ForeignKey('candidates.id'), index=True)
     candidate_resume_id = db.Column(db.Integer, db.ForeignKey('candidate_resumes.id'), index=True)
+    marvel_name = db.Column(db.String(256))
     status = db.Column(db.String(256))

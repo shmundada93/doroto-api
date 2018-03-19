@@ -10,3 +10,4 @@ class CandidateResume(Base):
     resume_name = db.Column(db.String(256))
     resume_url = db.Column(db.String(256))
     redacted_resume_url = db.Column(db.String(256))
+    jobs = db.relationship('JobRecruiterCandidate', backref='candidate_resume', lazy='dynamic')

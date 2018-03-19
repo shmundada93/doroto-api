@@ -8,6 +8,8 @@ from ..exceptions import ValidationError
 from werkzeug.utils import secure_filename
 from ..utils import allowed_file
 from ..tasks import redactAndUploadResume, uploadFileToS3
+import random
+from ..superheroes import marvel_names
 import os
 import uuid
 
@@ -43,6 +45,23 @@ def upload_resume(id):
     return jsonify(response), 201
 
 
+@api.route('/candidate/<int:id>/resumes/', methods=['GET'])
+@has_permissions("candidate")
+def get_candidate_resumes(id):
+    candidate = Candidate.query.get_or_404(id)
+    resumes = []
+    for resume in candidate.resumes:
+        resumes.append({
+            "resume_id" : resume.id,
+            "resume_name" : resume.resume_name,
+            "resume_url": resume.resume_url
+        })
+    response = {
+        "resumes": resumes
+    }
+    return jsonify(response)
+
+
 @api.route('/candidate/<int:id>/job/<guid>/apply', methods=['POST'])
 @has_permissions("candidate")
 def apply_for_job(id, guid):
@@ -65,7 +84,8 @@ def apply_for_job(id, guid):
         job_recruiter_id=job_recruiter.id,
         candidate_id=id,
         candidate_resume_id=candidate_resume_id,
-        status=CandidateStatus.ACCEPTED
+        status=CandidateStatus.ACCEPTED,
+        marvel_name=random.sample(marvel_names, 1)[0]
         )
     db.session.add(job_recruiter_candidate)
     db.session.commit()
