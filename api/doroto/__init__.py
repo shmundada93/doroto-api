@@ -41,7 +41,7 @@ def create_app(config_name):
     @no_cache
     @json
     def get_auth_token():
-        return {'token': g.user.generate_auth_token(), 'role': g.user.role.name}
+        return {'token': g.user.generate_auth_token(), 'role': g.user.role.name, 'id': g.user.id}
 
     return app
 
