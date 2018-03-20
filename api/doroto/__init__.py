@@ -5,7 +5,6 @@ from celery import Celery
 from .decorators import json, no_cache, rate_limit
 import boto3
 from doroto.constants import RoleType
-from doroto.models import Company, Recruiter, Candidate
 from doroto.exceptions import ValidationError
 db = SQLAlchemy()
 
@@ -37,6 +36,7 @@ def create_app(config_name):
 
     # authentication token route
     from .auth import auth
+    from doroto.models import Company, Recruiter, Candidate
     @app.route('/get-auth-token')
     @auth.login_required
     @rate_limit(1, 600)  # one call per 10 minute period
