@@ -1,6 +1,7 @@
 from flask import request, jsonify, g, abort
 from . import api
 from .. import db
+from ..auth import auth
 from ..models import Company, Job, PositionType, JobRecruiter, Recruiter, JobRecruiterCandidate
 from ..decorators import roles_required
 from ..constants import RoleType, JobStatus, RecruiterStatus, CandidateStatus, AccountStatus
@@ -25,6 +26,7 @@ def get_company(id):
 
 
 @api.route('/company/<int:id>/jobs/create', methods=['POST'])
+@auth.login_required
 @has_permissions("company")
 def create_job(id):
     company = Company.query.get_or_404(id)
@@ -53,6 +55,7 @@ def create_job(id):
 
 
 @api.route('/company/<id>/jobs/<int:job_id>/recruiters/', methods=['PUT'])
+@auth.login_required
 @has_permissions("company")
 def select_job_recruiters(id, job_id):
     job = Job.query.get_or_404(job_id)
@@ -91,6 +94,7 @@ def select_job_recruiters(id, job_id):
 
 
 @api.route('/company/<id>/recruiters/suggestions/', methods=['GET'])
+@auth.login_required
 @has_permissions("company")
 def get_suggested_recruiters(id):
     job_id = request.args.get('job_id')
@@ -114,6 +118,7 @@ def get_suggested_recruiters(id):
     return jsonify(response), 201
 
 @api.route('/company/<id>/job/<job_id>/candidates/', methods=['GET'])
+@auth.login_required
 @has_permissions("company")
 def get_job_candidates(id, job_id):
     job_recruiters = JobRecruiter.query.filter_by(job_id=job_id).all()
@@ -148,6 +153,7 @@ def get_job_candidates(id, job_id):
     return jsonify({"candidates": candidates}), 201
 
 @api.route('/company/<id>/job/<job_id>/candidate/<candidate_id>', methods=['PUT'])
+@auth.login_required
 @has_permissions("company")
 def update_candidate_status(id, job_id, candidate_id):
     data = request.json
@@ -168,6 +174,7 @@ def update_candidate_status(id, job_id, candidate_id):
 
 
 @api.route('/company/<int:id>/jobs/', methods=['GET'])
+@auth.login_required
 @has_permissions("company")
 def get_company_jobs(id):
     jobs = Job.query.filter_by(company_id=id).all()
@@ -187,7 +194,7 @@ def get_company_jobs(id):
                             .filter(JobRecruiterCandidate.status != CandidateStatus.ACCEPTED)\
                             .filter(JobRecruiterCandidate.status != CandidateStatus.SUBMITTED)\
                             .count()
-        
+
         resumes_requested = int(resumes_requested) if resumes_requested else 0
         jobs_info.append(
             {

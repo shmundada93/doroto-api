@@ -8,12 +8,14 @@ from ..exceptions import ValidationError
 from werkzeug.utils import secure_filename
 from ..utils import allowed_file
 from ..tasks import redactAndUploadResume, uploadFileToS3
+from ..auth import auth
 import random
 from ..superheroes import marvel_names
 import os
 import uuid
 
 @api.route('/candidates/<int:id>/resumes/', methods=['POST'])
+@auth.login_required
 @has_permissions("candidate")
 def upload_resume(id):
     ## Validate input
@@ -46,6 +48,7 @@ def upload_resume(id):
 
 
 @api.route('/candidate/<int:id>/resumes/', methods=['GET'])
+@auth.login_required
 @has_permissions("candidate")
 def get_candidate_resumes(id):
     candidate = Candidate.query.get_or_404(id)
@@ -63,6 +66,7 @@ def get_candidate_resumes(id):
 
 
 @api.route('/candidate/<int:id>/job/<guid>/apply', methods=['POST'])
+@auth.login_required
 @has_permissions("candidate")
 def apply_for_job(id, guid):
     job_recruiter = JobRecruiter.query.filter_by(guid=guid).first()

@@ -4,15 +4,13 @@ from .. import db
 from ..models import Recruiter, JobRecruiter, JobRecruiterCandidate
 from doroto.decorators.permission_evaluator import has_permissions
 from ..constants import RoleType
+from ..auth import auth
 from ..exceptions import ValidationError
 from ..constants import RoleType, JobStatus, RecruiterStatus, CandidateStatus, AccountStatus
 
-# To be written in comapny apis
-@api.route('/recruiter/', methods=['GET'])
-def get_recruiters():
-    return jsonify({'recruiters': [recruiter.export_data() for recruiter in Recruiter.query.all()]})
 
 @api.route('/recruiter/<id>', methods=['GET'])
+@auth.login_required
 @has_permissions("recruiter")
 def get_recruiter(id):
     recruiter = Recruiter.query.get_or_404(id)
@@ -27,6 +25,7 @@ def get_recruiter(id):
     return jsonify(response)
 
 @api.route('/recruiter/<id>/jobs', methods=['GET'])
+@auth.login_required
 @has_permissions("recruiter")
 def get_jobs(id):
     jobs = JobRecruiter.query.filter_by(recruiter_id=id).all()
@@ -53,6 +52,7 @@ def get_jobs(id):
     return jsonify({"jobs": temp_jobs})
 
 @api.route('/recruiter/<id>/job/<job_id>/status', methods=['PUT'])
+@auth.login_required
 @has_permissions("recruiter")
 def update_job_status(id, job_id):
     job = JobRecruiter.query.filter_by(job_id=job_id).filter_by(recruiter_id=id).first()
@@ -68,6 +68,7 @@ def update_job_status(id, job_id):
     }), 201
 
 @api.route('/recruiter/<id>/job/<job_id>/applicants', methods=['GET'])
+@auth.login_required
 @has_permissions("recruiter")
 def get_job_applicants(id, job_id):
        job_recruiter = JobRecruiter.query.filter_by(job_id=job_id).filter_by(recruiter_id=id).first()
@@ -86,6 +87,7 @@ def get_job_applicants(id, job_id):
        return jsonify({"candidates": temp}), 201
 
 @api.route('/recruiter/<id>/job/<job_id>/submit_applicants', methods=['PUT'])
+@auth.login_required
 @has_permissions("recruiter")
 def submit_candidates(id, job_id):
     job_recruiter = JobRecruiter.query.filter_by(job_id=job_id).filter_by(recruiter_id=id).first()
