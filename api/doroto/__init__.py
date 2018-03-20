@@ -4,7 +4,9 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from celery import Celery
 from .decorators import json, no_cache, rate_limit
 import boto3
-
+from constants import RoleType
+from models import Company, Recruiter, Candidate
+from exceptions import ValidationError
 db = SQLAlchemy()
 
 
@@ -41,7 +43,18 @@ def create_app(config_name):
     @no_cache
     @json
     def get_auth_token():
-        return {'token': g.user.generate_auth_token(), 'role': g.user.role.name, 'id': g.user.id}
+        role = g.user.role.name
+        if role == RoleType.ADMIN:
+            return {'token': g.user.generate_auth_token(), 'role': g.user.role.name}
+        elif role == RoleType.COMPANY:
+            entity = Company.query.filter_by(user_id=g.user.id).first()
+        elif role == RoleType.CANDIDATE:
+            entity = Candidate.query.filter_by(user_id=g.user.id).first()
+        elif role == RoleType.RECRUITER:
+            entity = Recruiter.query.filter_by(user_id=g.user.id).first()
+        if entity == None:
+            raise ValidationError("No entity associated with this user..")
+        return {'token': g.user.generate_auth_token(), 'role': g.user.role.name, 'id': entity.id}
 
     return app
 
