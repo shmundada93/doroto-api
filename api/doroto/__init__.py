@@ -4,9 +4,9 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from celery import Celery
 from .decorators import json, no_cache, rate_limit
 import boto3
-from constants import RoleType
-from models import Company, Recruiter, Candidate
-from exceptions import ValidationError
+from doroto.constants import RoleType
+from doroto.models import Company, Recruiter, Candidate
+from doroto.exceptions import ValidationError
 db = SQLAlchemy()
 
 
