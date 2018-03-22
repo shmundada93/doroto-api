@@ -186,7 +186,7 @@ def get_company_jobs(id):
                 "job_title": job.title,
                 "job_status": job.status,
                 "open_positions": job.open_positions,
-                "created_at": job.date_created,
+                "created_at": job.date_created.strftime("%B %d, %Y"),
                 "recruiters_engaged": job.job_recruiters.count(),
                 "candidate_stats":{
                     "requested": job.resumes_requested,
