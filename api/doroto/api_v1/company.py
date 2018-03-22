@@ -180,22 +180,6 @@ def get_company_jobs(id):
     jobs = Job.query.filter_by(company_id=id).all()
     jobs_info = []
     for job in jobs:
-        resumes_requested = db.session.query(func.sum(JobRecruiter.resume_limit).label('requested'))\
-                            .filter(JobRecruiter.job_id==job.id).first().requested
-        resumes_received = db.session.query(JobRecruiterCandidate).join(JobRecruiter).join(Job)\
-                            .filter(JobRecruiterCandidate.job_recruiter_id == JobRecruiter.id)\
-                            .filter(JobRecruiter.job_id == job.id)\
-                            .filter(JobRecruiterCandidate.status != CandidateStatus.ACCEPTED)\
-                            .count()
-
-        resumes_shortlisted = db.session.query(JobRecruiterCandidate).join(JobRecruiter).join(Job)\
-                            .filter(JobRecruiterCandidate.job_recruiter_id == JobRecruiter.id)\
-                            .filter(JobRecruiter.job_id == job.id)\
-                            .filter(JobRecruiterCandidate.status != CandidateStatus.ACCEPTED)\
-                            .filter(JobRecruiterCandidate.status != CandidateStatus.SUBMITTED)\
-                            .count()
-
-        resumes_requested = int(resumes_requested) if resumes_requested else 0
         jobs_info.append(
             {
                 "job_id": job.id,
@@ -203,10 +187,11 @@ def get_company_jobs(id):
                 "job_status": job.status,
                 "open_positions": job.open_positions,
                 "created_at": job.date_created,
+                "recruiters_engaged": job.job_recruiters.count(),
                 "candidate_stats":{
-                    "requested": resumes_requested,
-                    "received": resumes_received,
-                    "shortlisted": resumes_shortlisted
+                    "requested": job.resumes_requested,
+                    "received": job.resumes_received,
+                    "shortlisted": job.resumes_shortlisted
                 }
             }
         )
