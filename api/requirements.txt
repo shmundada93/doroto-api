@@ -7,7 +7,7 @@ botocore==1.9.11
 celery==4.1.0
 coverage==3.7.1
 docutils==0.14
-Flask==0.10.1
+Flask==1.0
 Flask-Cors==3.0.3
 Flask-HTTPAuth==2.2.1
 Flask-Migrate==2.1.1
